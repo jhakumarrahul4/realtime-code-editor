@@ -1,0 +1,45 @@
+<%- include("partials/header") %>
+
+<div class="home-container">
+
+    <h1>🚀 Realtime Code Editor</h1>
+
+    <!-- Create Room -->
+    <form action="/create-room" method="POST">
+        <button type="submit" class="btn-primary">
+            ➕ Create New Room
+        </button>
+    </form>
+
+    <hr style="margin: 30px 0;">
+
+    <!-- Join Existing Room -->
+    <div class="join-room-box">
+        <input 
+            type="text" 
+            id="roomInput" 
+            placeholder="Enter Room ID"
+        >
+
+        <button onclick="joinRoom()" class="btn-run">
+            🔗 Join Room
+        </button>
+    </div>
+
+</div>
+
+<script>
+    function joinRoom() {
+        const roomId = document.getElementById("roomInput").value.trim();
+
+        if (!roomId) {
+            alert("Please enter a Room ID");
+            return;
+        }
+
+        // Redirect to that room
+        window.location.href = `/room/${roomId}`;
+    }
+</script>
+
+<%- include("partials/footer") %>

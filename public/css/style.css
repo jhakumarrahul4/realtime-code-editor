@@ -1,0 +1,168 @@
+.editor-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  justify-content: space-between;
+  border-radius: 90%;
+}
+
+/* Left side */
+.left-controls {
+  flex: 1;
+}
+
+/* Right side */
+.right-controls {
+  flex: 1;
+  text-align: right;
+}
+
+/* Perfect Center */
+.center-controls {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Styled Dropdown */
+.styled-select {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #1f2937;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.styled-select:hover {
+  border-color: #4caf50;
+}
+
+/* Run Button Styling */
+.btn-run {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4caf50, #2ecc71);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-run:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 255, 150, 0.3);
+}
+
+.console-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.console-box {
+  width: 100%;
+  flex: 1;
+}
+
+#input {
+  width: 100%;
+  height: 120px;
+  background-color: #1e1e1e;
+  color: white;
+  border: 1px solid #444;
+  padding: 10px;
+  font-family: monospace;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+#output {
+  width: 100%;
+  height: 250px;
+  background-color: #0d1117;
+  color: #00ff90;
+  border: 1px solid #333;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 14px;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.join-room-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.join-room-box input {
+  padding: 10px;
+  width: 300px;
+  border-radius: 5px;
+  border: 1px solid #444;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.navbar {
+  background: #111;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.home-container {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.btn-primary,
+.btn-run {
+  padding: 10px 20px;
+  border: none;
+  background: #4caf50;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.editor-container {
+  padding: 10px;
+}
+
+#editor {
+  height: 500px;
+  width: 100%;
+  border: 1px solid #333;
+}
+
+textarea {
+  width: 100%;
+  height: 120px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  padding: 10px;
+}
+
+.footer {
+  text-align: center;
+  padding: 15px;
+  margin-top: 20px;
+  background: #111;
+}
