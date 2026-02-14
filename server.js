@@ -4,10 +4,11 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require("express");
 const http = require("http");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const WebSocket = require("ws");
-const { setupWSConnection } = require("y-websocket/bin/utils");
+
+// ✅ Correct import (important)
+const { setupWSConnection } = require("y-websocket/dist/utils.cjs");
 
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
