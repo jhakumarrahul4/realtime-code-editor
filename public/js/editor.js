@@ -8,56 +8,55 @@ if (typeof roomId !== "undefined") {
   socket.emit("join-room", roomId);
 }
 
-let editor; // declare globally
-
+let editor;
+let isRemoteChange = false; // 🔥 Prevent infinite loop
 
 // ===============================
 // Monaco Editor Setup
 // ===============================
 require.config({
   paths: {
-    vs: "https://unpkg.com/monaco-editor@0.44.0/min/vs"
-  }
+    vs: "https://unpkg.com/monaco-editor@0.44.0/min/vs",
+  },
 });
 
 require(["vs/editor/editor.main"], function () {
-
-  editor = monaco.editor.create(
-    document.getElementById("editor"),
-    {
-      value: typeof initialCode !== "undefined" ? initialCode : "",
-      language: getMonacoLanguage(
-        typeof initialLanguage !== "undefined" ? initialLanguage : "63"
-      ),
-      theme: "vs-dark",
-      automaticLayout: true
-    }
-  );
+  editor = monaco.editor.create(document.getElementById("editor"), {
+    value: typeof initialCode !== "undefined" ? initialCode : "",
+    language: getMonacoLanguage(
+      typeof initialLanguage !== "undefined" ? initialLanguage : "63",
+    ),
+    theme: "vs-dark",
+    automaticLayout: true,
+  });
 
   // ===============================
   // Real-time Code Change
   // ===============================
   editor.onDidChangeModelContent(() => {
+    if (isRemoteChange) return; // 🔥 Ignore remote updates
+
     const code = editor.getValue();
 
     socket.emit("code-change", {
       roomId,
-      code
+      code,
     });
   });
-
 });
 
-
 // ===============================
-// Receive Code Updates (SAFE)
+// Receive Code Updates
 // ===============================
 socket.on("code-update", (newCode) => {
-  if (editor && editor.getValue() !== newCode) {
+  if (!editor) return;
+
+  if (editor.getValue() !== newCode) {
+    isRemoteChange = true; // 🔥 Mark as remote change
     editor.setValue(newCode);
+    isRemoteChange = false; // 🔥 Reset flag
   }
 });
-
 
 // ===============================
 // Language Change Handling
@@ -66,29 +65,26 @@ const languageDropdown = document.getElementById("language");
 
 if (languageDropdown) {
   languageDropdown.addEventListener("change", function () {
-
     const selectedLanguage = this.value;
 
     if (editor) {
       monaco.editor.setModelLanguage(
         editor.getModel(),
-        getMonacoLanguage(selectedLanguage)
+        getMonacoLanguage(selectedLanguage),
       );
     }
 
     socket.emit("language-change", {
       roomId,
-      language: selectedLanguage
+      language: selectedLanguage,
     });
   });
 }
-
 
 // ===============================
 // Receive Language Updates
 // ===============================
 socket.on("update-language", (language) => {
-
   if (languageDropdown) {
     languageDropdown.value = language;
   }
@@ -96,17 +92,15 @@ socket.on("update-language", (language) => {
   if (editor) {
     monaco.editor.setModelLanguage(
       editor.getModel(),
-      getMonacoLanguage(language)
+      getMonacoLanguage(language),
     );
   }
 });
-
 
 // ===============================
 // Run Code
 // ===============================
 async function runCode() {
-
   if (!editor) return;
 
   const code = editor.getValue();
@@ -120,8 +114,8 @@ async function runCode() {
       body: JSON.stringify({
         code,
         language,
-        input
-      })
+        input,
+      }),
     });
 
     const data = await res.json();
@@ -135,15 +129,12 @@ async function runCode() {
 
     socket.emit("console-output", {
       roomId,
-      output
+      output,
     });
-
   } catch (error) {
     document.getElementById("output").value = "Execution Failed";
   }
 }
-
-
 
 // ===============================
 // Receive Console Output
@@ -152,18 +143,16 @@ socket.on("receive-console-output", (output) => {
   document.getElementById("output").value = output;
 });
 
-
 // ===============================
 // Helper Function
 // ===============================
 function getMonacoLanguage(languageId) {
-
   const map = {
-    "63": "javascript",
-    "71": "python",
-    "54": "cpp",
-    "50": "c",
-    "62": "java"
+    63: "javascript",
+    71: "python",
+    54: "cpp",
+    50: "c",
+    62: "java",
   };
 
   return map[languageId] || "javascript";
