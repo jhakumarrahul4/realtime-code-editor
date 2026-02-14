@@ -1,18 +1,5 @@
 // ===============================
-// Initialize Socket
-// ===============================
-const socket = io();
-
-// Make sure roomId exists
-if (typeof roomId !== "undefined") {
-  socket.emit("join-room", roomId);
-}
-
-let editor;
-let isRemoteChange = false; // 🔥 Prevent infinite loop
-
-// ===============================
-// Monaco Editor Setup
+// Monaco Loader Config
 // ===============================
 require.config({
   paths: {
@@ -20,92 +7,72 @@ require.config({
   },
 });
 
+let editor;
+
+// ===============================
+// Initialize Monaco + Yjs
+// ===============================
 require(["vs/editor/editor.main"], function () {
+
+  // Create Yjs document
+  const ydoc = new Y.Doc();
+
+  // Connect to same Railway server using WebSocket
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const provider = new WebsocketProvider(
+    wsProtocol + "//" + window.location.host,
+    roomId,
+    ydoc
+  );
+
+  // Shared text type
+  const yText = ydoc.getText("monaco");
+
+  // Create Monaco editor
   editor = monaco.editor.create(document.getElementById("editor"), {
-    value: typeof initialCode !== "undefined" ? initialCode : "",
-    language: getMonacoLanguage(
-      typeof initialLanguage !== "undefined" ? initialLanguage : "63",
-    ),
     theme: "vs-dark",
     automaticLayout: true,
+    language: getMonacoLanguage(
+      typeof initialLanguage !== "undefined" ? initialLanguage : "63"
+    ),
   });
 
-  // ===============================
-  // Real-time Code Change
-  // ===============================
-  editor.onDidChangeModelContent(() => {
-    if (isRemoteChange) return; // 🔥 Ignore remote updates
+  // Bind Monaco to Yjs
+  new MonacoBinding(
+    yText,
+    editor.getModel(),
+    new Set([editor]),
+    provider.awareness
+  );
 
-    const code = editor.getValue();
-
-    socket.emit("code-change", {
-      roomId,
-      code,
-    });
-  });
+  console.log("✅ Yjs collaborative editor ready");
 });
 
 // ===============================
-// Receive Code Updates
-// ===============================
-socket.on("code-update", (newCode) => {
-  if (!editor) return;
-
-  if (editor.getValue() !== newCode) {
-    isRemoteChange = true; // 🔥 Mark as remote change
-    editor.setValue(newCode);
-    isRemoteChange = false; // 🔥 Reset flag
-  }
-});
-
-// ===============================
-// Language Change Handling
+// Language Change
 // ===============================
 const languageDropdown = document.getElementById("language");
 
 if (languageDropdown) {
   languageDropdown.addEventListener("change", function () {
-    const selectedLanguage = this.value;
-
     if (editor) {
       monaco.editor.setModelLanguage(
         editor.getModel(),
-        getMonacoLanguage(selectedLanguage),
+        getMonacoLanguage(this.value)
       );
     }
-
-    socket.emit("language-change", {
-      roomId,
-      language: selectedLanguage,
-    });
   });
 }
 
 // ===============================
-// Receive Language Updates
-// ===============================
-socket.on("update-language", (language) => {
-  if (languageDropdown) {
-    languageDropdown.value = language;
-  }
-
-  if (editor) {
-    monaco.editor.setModelLanguage(
-      editor.getModel(),
-      getMonacoLanguage(language),
-    );
-  }
-});
-
-// ===============================
-// Run Code
+// Run Code (unchanged)
 // ===============================
 async function runCode() {
   if (!editor) return;
 
   const code = editor.getValue();
   const language = languageDropdown.value;
-  const input = document.getElementById("input").value || "";
+  const input = document.getElementById("input")?.value || "";
 
   try {
     const res = await fetch("/api/run", {
@@ -121,27 +88,15 @@ async function runCode() {
     const data = await res.json();
 
     let output = "";
-
     if (data.stdout) output += data.stdout;
     if (data.stderr) output += data.stderr;
 
     document.getElementById("output").value = output;
 
-    socket.emit("console-output", {
-      roomId,
-      output,
-    });
   } catch (error) {
     document.getElementById("output").value = "Execution Failed";
   }
 }
-
-// ===============================
-// Receive Console Output
-// ===============================
-socket.on("receive-console-output", (output) => {
-  document.getElementById("output").value = output;
-});
 
 // ===============================
 // Helper Function

@@ -1,16 +1,17 @@
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
+
 const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const socketIO = require("socket.io");
+const WebSocket = require("ws");
+const { setupWSConnection } = require("y-websocket/bin/utils");
 
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
 const runRoutes = require("./routes/runRoutes");
-const socketHandler = require("./sockets/socketHandler");
 
 // ===============================
 // Initialize App
@@ -19,14 +20,15 @@ const app = express();
 const server = http.createServer(app);
 
 // ===============================
-// Socket.io Setup
+// Yjs WebSocket Server Setup
 // ===============================
-const io = socketIO(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+const wss = new WebSocket.Server({ server });
+
+wss.on("connection", (conn, req) => {
+  setupWSConnection(conn, req);
 });
+
+console.log("✅ Yjs WebSocket server initialized");
 
 // ===============================
 // Connect Database
@@ -54,12 +56,7 @@ app.use("/", roomRoutes);
 app.use("/api", runRoutes);
 
 // ===============================
-// Socket Handler
-// ===============================
-socketHandler(io);
-
-// ===============================
-// Default Route (Optional Health Check)
+// Health Check
 // ===============================
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "Server is running" });
