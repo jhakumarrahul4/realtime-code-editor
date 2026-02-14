@@ -1,5 +1,6 @@
-require("dotenv").config();
-
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
@@ -23,8 +24,8 @@ const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+  },
 });
 
 // ===============================
